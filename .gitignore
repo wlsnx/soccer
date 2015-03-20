@@ -1,0 +1,10 @@
+*.pyc
+dump.rdb
+build/
+project.egg-info/
+dbs/
+eggs/
+items/
+twistd.pid
+*~
+settings.py
