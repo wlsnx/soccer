@@ -73,7 +73,7 @@ class FootballDetail(DefaultValueItem):
 class Match(DefaultValueItem):
     id          = scrapy.Field(default = 0, output_processor = TakeFirst())
     m_time      = scrapy.Field(output_processor=TakeFirst())
-    home_scores = scrapy.Field(default = 0, iutput_processor   = Compose(try_trans_int), output_processor = TakeFirst())
-    away_scores = scrapy.Field(default = 0, iutput_processor = Compose(try_trans_int), output_processor = TakeFirst())
+    home_scores = scrapy.Field(default = 0, output_processor = TakeFirst())
+    away_scores = scrapy.Field(default = 0, output_processor = TakeFirst())
     finish      = scrapy.Field(default = 0, output_processor = TakeFirst())
 
