@@ -9,11 +9,11 @@ import scrapy
 from scrapy.contrib.loader.processor import Compose, TakeFirst
 
 
-def try_trans_int(s):
-    try:
-        return int(s)
-    except ValueError:
-        return 0
+#def try_trans_int(s):
+    #try:
+        #return int(s)
+    #except ValueError:
+        #return 0
 
 
 class DefaultValueItem(scrapy.Item):
@@ -47,8 +47,8 @@ class Football(DefaultValueItem):
     away_red_card        = scrapy.Field(default=0 , output_processor=TakeFirst())
     home_saving          = scrapy.Field(default=0 , output_processor=TakeFirst())
     away_saving          = scrapy.Field(default=0 , output_processor=TakeFirst())
-    home_scores          = scrapy.Field(default=0 , iutput_processor=Compose(try_trans_int) , output_processor=TakeFirst())
-    away_scores          = scrapy.Field(default=0 , iutput_processor=Compose(try_trans_int) , output_processor=TakeFirst())
+    home_scores          = scrapy.Field(default=0 , output_processor=TakeFirst())
+    away_scores          = scrapy.Field(default=0 , output_processor=TakeFirst())
     date                 = scrapy.Field()
     time                 = scrapy.Field(output_processor=TakeFirst())
     attendance           = scrapy.Field(default=0)
