@@ -8,3 +8,4 @@ items/
 twistd.pid
 *~
 settings.py
+setup.py
