@@ -17,6 +17,7 @@ from itertools import chain
 SQL = "SELECT id,home,away,date,time FROM `match` WHERE finish <> 2 AND date=DATE(NOW()) AND league='cn'"
 MATCH_LIST = "http://mat1.gtimg.com/apps/test2/web_shasha_208_new.json"
 MATCH_DATA = "http://sportswebapi.qq.com/match/view?competitionId=208&matchId={0}"
+LIVE = "http://soccerdata.sports.qq.com/s/live.action?mid={0}"
 SELECT_ONE_MATCH = "SELECT id,home,away,date,time FROM `match` WHERE id={0} LIMIT 1"
 SHORTCUT = {
     "corner": "c",
@@ -38,15 +39,15 @@ class CslSpider(Spider):
     name="csl"
     allowed_domains = ["sports.qq.com"]
 
-    def __init__(self, match=None, mid=None, sql=None):
-        self.sql = sql
+    def __init__(self, id=None, mid=None, sql=None):
         self.mid = mid
-        if not self.sql and id:
+        if not sql and id:
             self.sql = SELECT_ONE_MATCH.format(id)
         else:
-            self.sql = SQL
+            self.sql = sql or SQL
         self.match_list_url = MATCH_LIST
         self.match_data_url = MATCH_DATA
+        self.live = LIVE
 
     def wait_match(self, match):
         now = datetime.now()
@@ -63,11 +64,11 @@ class CslSpider(Spider):
 
     def wait_to_tomorrow(self):
         now = datetime.now()
-        interval = 24 * 3600 - (now.hour * 3600 + now.minute * 60 + now.second) + self.interval
+        interval = 24 * 3600 - (now.hour * 3600 + now.minute * 60 + now.second) + self.scrape_interval
         return interval
 
     def fetch(self, match, mid):
-        request = Request(self.match_data.format(mid),
+        request = Request(self.live.format(mid),
                           dont_filter=True,
                           method="POST",
                           callback=self.parse_live,
@@ -84,10 +85,10 @@ class CslSpider(Spider):
         self.scrape_interval = self.crawler.settings.getint("SCRAPE_INTERVAL", 10)
         self.server = self.crawler.settings.get("DATABASE_SERVER")
         self.db = dataset.connect(self.server)
-        self.matches = self.db.query(self.sql)
+        self.matches = list(self.db.query(self.sql))
         self.close_on_idle = self.crawler.settings.getbool("CLOSE_ON_IDLE", True)
 
-    def start_request(self):
+    def start_requests(self):
         self.load_config()
         reactor.callLater(self.wait_to_tomorrow(), self.start_requests)
         if self.mid:
@@ -110,6 +111,7 @@ class CslSpider(Spider):
             tmatch["awayName"] in match["away"]
 
     def parse_match_list(self, response):
+        import pudb; pudb.set_trace()  # XXX BREAKPOINT
         match_list = json.loads(response.body[21:][:-1])
         matches = [m for match in match_list["matches"].values() for m in match]
         for match in self.matches:
