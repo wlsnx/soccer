@@ -43,7 +43,7 @@ def wait_match(match):
     elif delta < timedelta(0):
         return -1
     match_time = match["time"]
-    now = datetime.now.time()
+    now = datetime.now().time()
     interval = match_time.seconds - (now.hour * 3600 + now.minute * 60 + now.second)
     return max(interval, 0)
 
