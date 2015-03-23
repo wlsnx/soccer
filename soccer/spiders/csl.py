@@ -111,13 +111,12 @@ class CslSpider(Spider):
             tmatch["awayName"] in match["away"]
 
     def parse_match_list(self, response):
-        import pudb; pudb.set_trace()  # XXX BREAKPOINT
         match_list = json.loads(response.body[21:][:-1])
         matches = [m for match in match_list["matches"].values() for m in match]
         for match in self.matches:
             for tmatch in matches:
                 if self.same_match(tmatch, match):
-                    self.fetch(match, tmatch["id"])
+                    self.fetch(match, tmatch["matchId"])
                     break
             else:
                 self.task_done(match)
