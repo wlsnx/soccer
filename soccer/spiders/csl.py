@@ -2,23 +2,14 @@
 # encoding: utf-8
 
 
-import dataset
 from scrapy.http import Request
-from scrapy import signals, Spider
-from scrapy.exceptions import DontCloseSpider
 from scrapy.contrib.loader import ItemLoader
 from soccer.items import Match, Football, FootballDetail
-from twisted.internet import reactor
 import json
-from datetime import datetime, date, timedelta
 from itertools import chain
+from soccer.spiders.cs import SoccerSpider, MatchFinished
 
 
-SQL = "SELECT id,home,away,date,time FROM `match` WHERE finish <> 2 AND date=DATE(NOW()) AND league='cn'"
-MATCH_LIST = "http://mat1.gtimg.com/apps/test2/web_shasha_208_new.json"
-MATCH_DATA = "http://sportswebapi.qq.com/match/view?competitionId=208&matchId={0}"
-LIVE = "http://soccerdata.sports.qq.com/s/live.action?mid={0}"
-SELECT_ONE_MATCH = "SELECT id,home,away,date,time FROM `match` WHERE id={0} LIMIT 1"
 SHORTCUT = {
     "corner": "c",
     "shots": "so",
@@ -35,74 +26,22 @@ MATCH_STATUS = {
 }
 
 
-class CslSpider(Spider):
+class CslSpider(SoccerSpider):
     name="csl"
     allowed_domains = ["sports.qq.com"]
+    start_urls = []
 
-    def __init__(self, id=None, mid=None, sql=None):
-        self.mid = mid
-        if not sql and id:
-            self.sql = SELECT_ONE_MATCH.format(id)
-        else:
-            self.sql = sql or SQL
-        self.match_list_url = MATCH_LIST
-        self.match_data_url = MATCH_DATA
-        self.live = LIVE
-
-    def wait_match(self, match):
-        now = datetime.now()
-        today = date(now.year, now.month, now.day)
-        delta = today - match["date"]
-        if delta > timedelta(0):
-            return 0
-        elif delta < timedelta(0):
-            return -1
-        match_time = match["time"]
-        now = datetime.now().time()
-        interval = match_time.seconds - (now.hour * 3600 + now.minute * 60 + now.second)
-        return max(interval, 0)
-
-    def wait_to_tomorrow(self):
-        now = datetime.now()
-        interval = 24 * 3600 - (now.hour * 3600 + now.minute * 60 + now.second) + self.scrape_interval
-        return interval
-
-    def fetch(self, match, mid):
-        request = Request(self.live.format(mid),
-                          dont_filter=True,
-                          method="POST",
-                          callback=self.parse_live,
-                          meta=dict(match=match))
-        wait_seconds = self.wait_match(match)
-        if wait_seconds >= 0:
-            reactor.callLater(wait_seconds,
-                              self.crawler.engine.schedule,
-                              request=request,
-                              spider=self)
-
-    def load_config(self):
-        self.crawler.signals.connect(self.spider_idle, signals.spider_idle)
-        self.scrape_interval = self.crawler.settings.getint("SCRAPE_INTERVAL", 10)
-        self.server = self.crawler.settings.get("DATABASE_SERVER")
-        self.db = dataset.connect(self.server)
-        self.matches = list(self.db.query(self.sql))
-        self.close_on_idle = self.crawler.settings.getbool("CLOSE_ON_IDLE", True)
-
-    def start_requests(self):
-        self.load_config()
-        reactor.callLater(self.wait_to_tomorrow(), self.start_requests)
-        if self.mid:
-            match = self.matches[0]
-            self.fetch(match, self.mid)
-            return
-        else:
-            return self.generate_requests()
+    SQL = "SELECT id,home,away,date,time FROM `match` WHERE finish <> 2 AND date=DATE(NOW()) AND league='cn'"
+    MATCH_LIST = "http://mat1.gtimg.com/apps/test2/web_shasha_208_new.json"
+    #MATCH_DATA = "http://sportswebapi.qq.com/match/view?competitionId=208&matchId={0}"
+    LIVE = "http://soccerdata.sports.qq.com/s/live.action?mid={0}"
+    SELECT_ONE_MATCH = "SELECT id,home,away,date,time FROM `match` WHERE id={0} LIMIT 1"
 
     def parse(self, response):
         pass
 
     def generate_requests(self):
-        yield Request(MATCH_LIST,
+        yield Request(self.MATCH_LIST,
                       callback=self.parse_match_list)
 
     def same_match(self,tmatch, match):
@@ -118,8 +57,6 @@ class CslSpider(Spider):
                 if self.same_match(tmatch, match):
                     self.fetch(match, tmatch["matchId"])
                     break
-            else:
-                self.task_done(match)
 
     def parse_live(self, response):
         live = json.loads(response.body)
@@ -238,21 +175,6 @@ class CslSpider(Spider):
         yield football_loader.load_item()
 
         #repeat
-        if finish != 2:
-            reactor.callLater(self.scrape_inerval, self.crawler.engine.schedule, request=response.rquest, spider=self)
-        else:
-            self.task_done(match)
-
-    def spider_idle(self, spider):
-        if spider is self and (not self.close_on_idle or self.has_task()):
-            raise DontCloseSpider("Dont close me! I have delay tasks now!")
-
-    def task_done(self, match):
-        if match in self.matches:
-            self.matches.pop(self.matches.index(match))
-
-    def has_task(self):
-        return self.matches
-
-
+        if finish == 2:
+            raise MatchFinished()
 
