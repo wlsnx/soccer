@@ -67,6 +67,7 @@ class SoccerSpider(Spider):
                               self.crawler.engine.schedule,
                               request=request,
                               spider=self)
+            self.get_task()
 
     def load_config(self):
         self.crawler.signals.connect(self.spider_idle, signals.spider_idle)
