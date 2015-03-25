@@ -107,8 +107,10 @@ class SoccerSpider(Spider):
         except MatchFinished:
             pass
 
-    def spider_idle(self):
+    def spider_idle(self, spider):
         """This spider will not close if it has any tasks or you set CLOSE_ON_IDLE to False"""
+        if spider is not self:
+            return
         if not self.close_on_idle:
             raise DontCloseSpider("This spider will not stop on idle,"
                                   "you can add CLOSE_ON_DILE to scrapy.cfg")
