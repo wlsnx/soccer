@@ -39,7 +39,7 @@ class CachedDatabasePipeline(object):
 
         old_item = self.cache.get(key)
         if not (old_item and equal(item, pickle.loads(old_item))):
-            self.cache.set(key, pickle.dumps(item))
+            self.cache.set(key, pickle.dumps(item), ex=2*3600)
             self.save(item)
         return item
 
