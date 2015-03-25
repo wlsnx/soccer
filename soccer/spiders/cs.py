@@ -78,6 +78,7 @@ class SoccerSpider(Spider):
         self.close_on_idle = self.crawler.settings.getbool("CLOSE_ON_IDLE", True)
 
     def generate_requests(self):
+        """It must return an iterable object"""
         yield
 
     def start_requests(self):
@@ -88,9 +89,11 @@ class SoccerSpider(Spider):
                                      signals.spider_idle)
         for request in chain(self.generate_requests(),
                              super(SoccerSpider, self).start_requests()):
-            yield request
+            if request:
+                yield request
 
     def parse_match(self, response):
+        """It will repeat every <self.scrape_interval> seconds"""
         self.task_done()
         try:
             for item in self.parse_live(response):
@@ -104,6 +107,7 @@ class SoccerSpider(Spider):
             pass
 
     def spider_idle(self):
+        """This spider will not close if it has any tasks or you set CLOSE_ON_IDLE to False"""
         if not self.close_on_idle:
             raise DontCloseSpider("This spider will not stop on idle,"
                                   "you can add CLOSE_ON_DILE to scrapy.cfg")

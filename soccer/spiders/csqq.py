@@ -1,21 +1,15 @@
-# -*- coding: utf-8 -*-
-import scrapy
-import dataset
-from scrapy.http import Request
-import json
-from soccer.items import Match, Football, FootballDetail
-from datetime import datetime, date, timedelta
-from twisted.internet import reactor
-from scrapy import signals
-from scrapy.exceptions import DontCloseSpider
+#!/usr/bin/env python
+# encoding: utf-8
+
+
+#from scrapy.http import Request
 from scrapy.contrib.loader import ItemLoader
+from soccer.items import Match, Football, FootballDetail
+import json
 from itertools import chain
+from soccer.spiders.cs import SoccerSpider, MatchFinished
 
 
-SQL = "SELECT id,home,away,date,time FROM `match` WHERE finish <> 2 AND date=DATE(NOW()) AND league IN {0}"
-SELECT_ONE_MATCH = "SELECT id,home,away,date,time FROM `match` WHERE id={0} LIMIT 1"
-FIXTUREDAY = "http://soccerdata.sports.qq.com/s/getFixtureDay.action?compid=&time={0}"
-LIVE = "http://soccerdata.sports.qq.com/s/live.action?mid={0}"
 SHORTCUT = {
     "corner": "c",
     "shots": "so",
@@ -31,82 +25,37 @@ MATCH_STATUS = {
     "prematch": 0,
 }
 
-same_match = lambda tmatch, match: tmatch["homename"] == match["home"] and tmatch["awayname"] == match["away"]
 
+class CsqqSpider(SoccerSpider):
+    name="csqq"
+    allowed_domains = ["sports.qq.com"]
+    start_urls = []
 
-def wait_match(match):
-    now = datetime.now()
-    today = date(now.year, now.month, now.day)
-    delta = today - match["date"]
-    if delta > timedelta(0):
-        return 0
-    elif delta < timedelta(0):
-        return -1
-    match_time = match["time"]
-    now = datetime.now().time()
-    interval = match_time.seconds - (now.hour * 3600 + now.minute * 60 + now.second)
-    return max(interval, 0)
-
-def wait_to_tomorrow(interval=10):
-    now = datetime.now()
-    interval = 24 * 3600 - (now.hour * 3600 + now.minute * 60 + now.second) + interval
-    return interval
-
-
-class CsqqSpider(scrapy.Spider):
-    name = "csqq"
-    allowed_domains = ["soccerdata.sports.qq.com"]
-
-    def __init__(self, id=None, sql=None, mid=None):
-        self.sql = sql
-        self.mid = mid
-        if not self.sql and id:
-            self.sql = SELECT_ONE_MATCH.format(id)
-
-    def fetch(self, match, mid):
-        request = Request(LIVE.format(mid),
-                        dont_filter=True,
-                        method="POST",
-                        callback=self.parse_live,
-                        meta=dict(match=match))
-        wait_seconds = wait_match(match)
-        if wait_seconds >= 0:
-            reactor.callLater(wait_seconds,
-                              self.crawler.engine.schedule,
-                              request=request,
-                              spider=self)
-
-    def start_requests(self):
-        self.crawler.signals.connect(self.spider_idle, signals.spider_idle)
-        self.scrape_interval = self.crawler.settings.getint("SCRAPE_INTERVAL", 10)
-        reactor.callLater(wait_to_tomorrow(self.scrape_interval), self.start_requests)
-        self.comp_list = self.crawler.settings.get("LEAGUE", ["cn"])
-        if not self.sql:
-            self.sql = SQL.format(str(tuple(self.comp_list)).replace(",)", ")"))
-        self.server = self.crawler.settings.get("DATABASE_SERVER")
-        self.db = dataset.connect(self.server)
-        self.matches = list(self.db.query(self.sql))
-        self.close_on_idle = self.crawler.settings.getbool("CLOSE_ON_IDLE", True)
-        if self.mid:
-            match = self.matches[0]
-            self.fetch(match, self.mid)
-            self.matches = [match]
-            return
-        for match in self.matches:
-            yield Request(FIXTUREDAY.format(match["date"]),
-                          dont_filter=True,
-                          callback=self.parse,
-                          meta=dict(match=match))
+    SQL = "SELECT id,home,away,date,time FROM `match` WHERE finish <> 2 AND date=DATE(NOW()) AND league='cn'"
+    MATCH_LIST = "http://mat1.gtimg.com/apps/test2/web_shasha_208_new.json"
+    #MATCH_DATA = "http://sportswebapi.qq.com/match/view?competitionId=208&matchId={0}"
+    LIVE = "http://soccerdata.sports.qq.com/s/live.action?mid={0}"
+    SELECT_ONE_MATCH = "SELECT id,home,away,date,time FROM `match` WHERE id={0} LIMIT 1"
 
     def parse(self, response):
-        match = response.meta["match"]
-        match_list = json.loads(response.body)
-        for t in match_list["fixtureList"].get("tlist", []):
-            if same_match(t, match):
-                self.fetch(match, t["id"])
-                break
-        else:
-            self.task_done(match)
+        pass
+
+    def generate_requests(self):
+        import requests
+        response = requests.get(self.MATCH_LIST).content
+        match_list = json.loads(response[21:][:-1])
+        matches = [m for match in match_list["matches"].values() for m in match]
+        for match in self.matches:
+            for tmatch in matches:
+                if self.same_match(tmatch, match):
+                    self.fetch(match, tmatch["matchId"])
+                    break
+        yield
+
+    def same_match(self,tmatch, match):
+        return str(match["date"]) in tmatch["startTime"] and \
+            tmatch["homeName"] in match["home"] and \
+            tmatch["awayName"] in match["away"]
 
     def parse_live(self, response):
         live = json.loads(response.body)
@@ -225,19 +174,6 @@ class CsqqSpider(scrapy.Spider):
         yield football_loader.load_item()
 
         #repeat
-        if finish != 2:
-            reactor.callLater(self.scrape_inerval, self.crawler.engine.schedule, request=response.rquest, spider=self)
-        else:
-            self.task_done(match)
-
-    def spider_idle(self, spider):
-        if spider is self and (not self.close_on_idle or self.has_task()):
-            raise DontCloseSpider("Dont close me! I have delay tasks now!")
-
-    def task_done(self, match):
-        if match in self.matches:
-            self.matches.pop(self.matches.index(match))
-
-    def has_task(self):
-        return self.matches
+        if finish == 2:
+            raise MatchFinished()
 
