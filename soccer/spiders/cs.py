@@ -20,6 +20,7 @@ class MatchFinished(Exception):
 class SoccerSpider(Spider):
 
     def __init__(self, mid=None, id=None, sql=None):
+        super(SoccerSpider, self).__init__()
         if id:
             self.sql = self.SELECT_ONE_MATCH.format(id)
         else:
