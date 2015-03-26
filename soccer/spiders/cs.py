@@ -9,14 +9,26 @@ from scrapy.exceptions import DontCloseSpider
 from twisted.internet import reactor
 from datetime import datetime, date, timedelta
 from itertools import chain
+import six
 
 
 class MatchFinished(Exception):
     pass
 
 
+class wrap_parse_match(type):
+
+    def __new__(cls, name, bases, attrs):
+        if "parse_match" in attrs and SoccerSpider in bases:
+            attrs["_parse_live"] = attrs["parse_match"]
+            attrs["parse_match"] = SoccerSpider._parse_match
+            del SoccerSpider._parse_match
+        return super(wrap_parse_match, cls).__new__(cls, name, bases, attrs)
+
+
 ##########################################SoccerSpider####################################################
 
+@six.add_metaclass(wrap_parse_match)
 class SoccerSpider(Spider):
 
     def __init__(self, mid=None, id=None, sql=None):
@@ -93,11 +105,11 @@ class SoccerSpider(Spider):
             if request:
                 yield request
 
-    def parse_match(self, response):
+    def _parse_match(self, response):
         """It will repeat every <self.scrape_interval> seconds"""
         self.task_done()
         try:
-            for item in self.parse_live(response):
+            for item in self._parse_live(response):
                 yield item
             reactor.callLater(self.scrape_interval,
                               self.crawler.engine.schedule,

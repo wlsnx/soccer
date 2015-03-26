@@ -57,7 +57,7 @@ class CsqqSpider(SoccerSpider):
             tmatch["homeName"] in match["home"] and \
             tmatch["awayName"] in match["away"]
 
-    def parse_live(self, response):
+    def parse_match(self, response):
         live = json.loads(response.body)
         match = response.meta["match"]
         resultinfo = live["resultinfo"]
