@@ -62,7 +62,6 @@ class DictCachedPipeline(object):
         return item
 
     def save(self, item):
-        print "*" * 100
         if isinstance(item, Match):
             table = self.db.get_table("match")
             table.update(item, ["id"])

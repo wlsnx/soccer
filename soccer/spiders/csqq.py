@@ -41,9 +41,15 @@ class CsqqSpider(SoccerSpider):
         pass
 
     def generate_requests(self):
-        import requests
-        response = requests.get(self.MATCH_LIST).content
-        match_list = json.loads(response[21:][:-1])
+        from scrapy import Request
+        yield Request(self.MATCH_LIST,
+                      callback=self._generate_requests)
+
+    def _generate_requests(self, response=None):
+        #import requests
+        #response = requests.get(self.MATCH_LIST).content
+        #match_list = json.loads(response[21:][:-1])
+        match_list = json.loads(response.body[21:][:-1])
         matches = [m for match in match_list["matches"].values() for m in match]
         for match in self.matches:
             for tmatch in matches:
@@ -174,6 +180,6 @@ class CsqqSpider(SoccerSpider):
         yield football_loader.load_item()
 
         #repeat
-        #if finish == 2:
-            #raise MatchFinished()
+        if finish == 2:
+            raise MatchFinished()
 
