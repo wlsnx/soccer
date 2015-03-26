@@ -26,15 +26,16 @@ def player_info(table, player_name):
 class DictCache(dict):
 
     def set(self, key, value, ex=None):
-        self[key] = value
-        if ex:
+        if ex and key not in self:
             reactor.callLater(ex, self.delete, key)
+        self[key] = value
 
     def get(self, key):
         return super(DictCache, self).get(key, "")
 
     def delete(self, key):
-        del self[key]
+        if key in self:
+            del self[key]
 
     def flushall(self):
         self.clear()
