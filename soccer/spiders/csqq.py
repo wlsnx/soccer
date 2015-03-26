@@ -174,6 +174,6 @@ class CsqqSpider(SoccerSpider):
         yield football_loader.load_item()
 
         #repeat
-        if finish == 2:
-            raise MatchFinished()
+        #if finish == 2:
+            #raise MatchFinished()
 

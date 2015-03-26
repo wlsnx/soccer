@@ -8,6 +8,7 @@
 import redis
 from soccer.items import Match, Football, FootballDetail
 import cPickle as pickle
+from twisted.internet import reactor
 
 
 def equal(item, old_item):
@@ -22,11 +23,28 @@ def player_info(table, player_name):
     yield player["domain"] if player else ""
 
 
-class CachedDatabasePipeline(object):
+class DictCache(dict):
+
+    def set(self, key, value, ex=None):
+        self[key] = value
+        if ex:
+            reactor.callLater(ex, self.delete, key)
+
+    def get(self, key):
+        return super(DictCache, self).get(key, "")
+
+    def delete(self, key):
+        del self[key]
+
+    def flushall(self):
+        self.clear()
+
+class DictCachedPipeline(object):
 
     def __init__(self):
-        self.cache = redis.StrictRedis()
+        self.cache = DictCache()
         self.db = None
+        self.setargs = {"ex": 2*3600}
 
     def process_item(self, item, spider):
         self.db = spider.db
@@ -38,12 +56,13 @@ class CachedDatabasePipeline(object):
             key = "footballdetail:{mid}:{min}:{team}:{type}".format(**item)
 
         old_item = self.cache.get(key)
-        if not (old_item and equal(item, pickle.loads(old_item))):
-            self.cache.set(key, pickle.dumps(item), ex=2*3600)
+        if not (old_item and equal(item, old_item)):
+            self.cache.set(key, item, **self.setargs)
             self.save(item)
         return item
 
     def save(self, item):
+        print "*" * 100
         if isinstance(item, Match):
             table = self.db.get_table("match")
             table.update(item, ["id"])
@@ -73,4 +92,19 @@ class CachedDatabasePipeline(object):
             match = table.find_one(**item)
             if not match:
                 table.insert(item)
+
+
+class RedisCache(redis.Redis):
+
+    def get(self, key):
+        return pickle.loads(super(RedisCache, self).get(key))
+
+    def set(self, key, value, **kwargs):
+        return super(RedisCache, self).set(key, pickle.dumps(value), **kwargs)
+
+class RedisCachedPipeline(DictCachedPipeline):
+
+    def __init__(self):
+        super(RedisCachedPipeline, self).__init__()
+        self.cache = RedisCache()
 
