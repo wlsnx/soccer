@@ -31,8 +31,8 @@ class wrap_parse_match(type):
 @six.add_metaclass(wrap_parse_match)
 class SoccerSpider(Spider):
 
-    def __init__(self, mid=None, id=None, sql=None):
-        super(SoccerSpider, self).__init__()
+    def __init__(self, mid=None, id=None, sql=None, **kwargs):
+        super(SoccerSpider, self).__init__(**kwargs)
         if id:
             self.sql = self.SELECT_ONE_MATCH.format(id)
         else:
