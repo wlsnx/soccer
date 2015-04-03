@@ -123,6 +123,8 @@ class SoccerSpider(Spider):
             self.get_task()
         except MatchFinished:
             pass
+        except Exception as e:
+            self.log(e)
 
     def spider_idle(self, spider):
         """This spider will not close if it has any tasks or you set CLOSE_ON_IDLE to False"""
