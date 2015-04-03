@@ -43,6 +43,7 @@ class CsqqSpider(SoccerSpider):
     def generate_requests(self):
         from scrapy import Request
         yield Request(self.MATCH_LIST,
+                      dont_filter=True,
                       callback=self._generate_requests)
 
     def _generate_requests(self, response=None):
