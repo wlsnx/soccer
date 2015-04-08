@@ -83,6 +83,9 @@ class SoccerSpider(Spider):
             self.get_task()
 
     def load_config(self):
+        from soccer import settings
+        reload(settings)
+        self.settings.setmodule(settings)
         self.crawler.signals.connect(self.spider_idle, signals.spider_idle)
         self.SCRAPE_INTERVAL = self.crawler.settings.getint("SCRAPE_INTERVAL", 10)
         self.SERVER = self.crawler.settings.get("DATABASE_SERVER")
