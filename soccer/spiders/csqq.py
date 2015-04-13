@@ -85,11 +85,14 @@ class CsqqSpider(SoccerSpider):
         period = stat["period"]
         finish = MATCH_STATUS.get(period, 1)
 
+        home_score = stat["homescore"].replace("-", "0")
+        away_score = stat["awayscore"].replace("-", "0")
+
         match_loader = ItemLoader(Match())
 
         match_loader.add_value("id", match["id"])
-        match_loader.add_value("home_scores", stat["homescore"])
-        match_loader.add_value("away_scores", stat["awayscore"])
+        match_loader.add_value("home_scores", home_score)
+        match_loader.add_value("away_scores", away_score)
         match_loader.add_value("finish", finish)
         match_loader.add_value("m_time", stat["time"])
 
@@ -168,8 +171,8 @@ class CsqqSpider(SoccerSpider):
         for full, short in SHORTCUT.items():
             for team in ("home", "away"):
                 football_loader.add_value(team + "_" + full, stat[team].get(short, 0))
-        football_loader.add_value("home_scores", stat["homescore"])
-        football_loader.add_value("away_scores", stat["awayscore"])
+        football_loader.add_value("home_scores", home_score)
+        football_loader.add_value("away_scores", away_score)
         home_player_stat = stat["home"].get("player", [])
         away_player_stat = stat["away"].get("player", [])
         home_saving = sum([int(player_stat.get("sv", 0)) for player_stat in home_player_stat])
