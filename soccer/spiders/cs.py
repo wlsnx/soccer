@@ -124,10 +124,16 @@ class SoccerSpider(Spider):
                               request=response.request,
                               spider=self)
             self.get_task()
-        except MatchFinished:
-            pass
+        #except MatchFinished:
+            #pass
         except Exception as e:
             self.log(e)
+            if not isinstance(e, MatchFinished):
+                reactor.callLater(self.SCRAPE_INTERVAL,
+                                self.crawler.engine.schedule,
+                                request=response.request,
+                                spider=self)
+                self.get_task()
 
     def spider_idle(self, spider):
         """This spider will not close if it has any tasks or you set CLOSE_ON_IDLE to False"""
