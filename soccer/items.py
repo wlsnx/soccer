@@ -18,14 +18,13 @@ from scrapy.contrib.loader.processor import Compose, TakeFirst
 
 class DefaultValueItem(scrapy.Item):
 
-    def __getitem__(self, key):
-        try:
-            return self._values[key]
-        except KeyError:
-            field = self.fields[key]
-            if "default" in field:
-                return field["default"]
-            raise
+    def __init__(self, *args, **kwargs):
+        super(DefaultValueItem, self).__init__(*args, **kwargs)
+        for key in self.fields:
+            value = self[key]
+            if "default" in value:
+                self[key] = value["default"]
+
 
 
 class Football(DefaultValueItem):
