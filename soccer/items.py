@@ -21,7 +21,7 @@ class DefaultValueItem(scrapy.Item):
     def __init__(self, *args, **kwargs):
         super(DefaultValueItem, self).__init__(*args, **kwargs)
         for key, value in self.fields.items():
-            if "default" in value:
+            if key not in self and "default" in value:
                 self[key] = value["default"]
 
 

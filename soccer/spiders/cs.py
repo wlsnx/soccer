@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 
-from scrapy import signals, Spider, log
+from scrapy import signals, Spider
 import dataset
 from scrapy.http import Request
 from scrapy.exceptions import DontCloseSpider
@@ -92,7 +92,7 @@ class SoccerSpider(Spider):
         self.db = dataset.connect(self.SERVER)
         self.matches = list(self.db.query(self.sql))
         self.CLOSE_ON_IDLE = self.crawler.settings.getbool("CLOSE_ON_IDLE", True)
-        log.start_from_crawl(self.crawl)
+        #log.start_from_crawler(self.crawl)
 
     def generate_requests(self):
         """It must return an iterable object"""
