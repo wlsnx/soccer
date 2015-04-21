@@ -7,6 +7,7 @@
 
 import scrapy
 from scrapy.contrib.loader.processor import Compose, TakeFirst
+from scrapy.contrib.loader import ItemLoader
 
 
 #def try_trans_int(s):
@@ -14,6 +15,10 @@ from scrapy.contrib.loader.processor import Compose, TakeFirst
         #return int(s)
     #except ValueError:
         #return 0
+
+class SoccerItemLoader(ItemLoader):
+
+    default_output_processor = TakeFirst()
 
 
 class DefaultValueItem(scrapy.Item):
@@ -27,51 +32,51 @@ class DefaultValueItem(scrapy.Item):
 
 
 class Football(DefaultValueItem):
-    home_shot            = scrapy.Field(default=0 , output_processor=TakeFirst())
-    away_shot            = scrapy.Field(default=0 , output_processor=TakeFirst())
-    home_shots           = scrapy.Field(default=0 , output_processor=TakeFirst())
-    away_shots           = scrapy.Field(default=0 , output_processor=TakeFirst())
-    home_fouls           = scrapy.Field(default=0 , output_processor=TakeFirst())
-    away_fouls           = scrapy.Field(default=0 , output_processor=TakeFirst())
-    home_corner          = scrapy.Field(default=0 , output_processor=TakeFirst())
-    away_corner          = scrapy.Field(default=0 , output_processor=TakeFirst())
-    home_offside         = scrapy.Field(default=0 , output_processor=TakeFirst())
-    away_offside         = scrapy.Field(default=0 , output_processor=TakeFirst())
-    home_ball_possession = scrapy.Field(default=0 , output_processor=TakeFirst())
-    away_ball_possession = scrapy.Field(default=0 , output_processor=TakeFirst())
-    home_yellow_card     = scrapy.Field(default=0 , output_processor=TakeFirst())
-    away_yellow_card     = scrapy.Field(default=0 , output_processor=TakeFirst())
-    home_red_card        = scrapy.Field(default=0 , output_processor=TakeFirst())
-    away_red_card        = scrapy.Field(default=0 , output_processor=TakeFirst())
-    home_saving          = scrapy.Field(default=0 , output_processor=TakeFirst())
-    away_saving          = scrapy.Field(default=0 , output_processor=TakeFirst())
-    home_scores          = scrapy.Field(default=0 , output_processor=TakeFirst())
-    away_scores          = scrapy.Field(default=0 , output_processor=TakeFirst())
+    home_shot            = scrapy.Field()
+    away_shot            = scrapy.Field()
+    home_shots           = scrapy.Field()
+    away_shots           = scrapy.Field()
+    home_fouls           = scrapy.Field()
+    away_fouls           = scrapy.Field()
+    home_corner          = scrapy.Field()
+    away_corner          = scrapy.Field()
+    home_offside         = scrapy.Field()
+    away_offside         = scrapy.Field()
+    home_ball_possession = scrapy.Field()
+    away_ball_possession = scrapy.Field()
+    home_yellow_card     = scrapy.Field()
+    away_yellow_card     = scrapy.Field()
+    home_red_card        = scrapy.Field()
+    away_red_card        = scrapy.Field()
+    home_saving          = scrapy.Field()
+    away_saving          = scrapy.Field()
+    home_scores          = scrapy.Field()
+    away_scores          = scrapy.Field()
     date                 = scrapy.Field()
-    time                 = scrapy.Field(output_processor=TakeFirst())
+    time                 = scrapy.Field()
     attendance           = scrapy.Field(default=0)
     mvp                  = scrapy.Field(default="")
     mvp_id               = scrapy.Field(default=0)
-    mid                  = scrapy.Field(default=0, output_processor=TakeFirst())
+    mid                  = scrapy.Field()
 
 
 class FootballDetail(DefaultValueItem):
-    mid             = scrapy.Field(default = 0  , output_processor = TakeFirst())
-    min             = scrapy.Field(default = 0  , output_processor = TakeFirst())
-    team            = scrapy.Field(default = 1  , output_processor = TakeFirst())
-    type            = scrapy.Field(default = 1  , output_processor = TakeFirst())
-    player_a        = scrapy.Field(default = "" , output_processor = TakeFirst())
-    player_a_id     = scrapy.Field(default = 0  , output_processor = TakeFirst())
-    player_a_domain = scrapy.Field(default = "" , output_processor = TakeFirst())
-    player_b        = scrapy.Field(default = "" , output_processor = TakeFirst())
-    player_b_id     = scrapy.Field(default = 0  , output_processor = TakeFirst())
-    player_b_domain = scrapy.Field(default = "" , output_processor = TakeFirst())
+    mid             = scrapy.Field()
+    min             = scrapy.Field()
+    team            = scrapy.Field()
+    type            = scrapy.Field()
+    player_a        = scrapy.Field(default = "")
+    player_a_id     = scrapy.Field(default = 0 )
+    player_a_domain = scrapy.Field(default = "")
+    player_b        = scrapy.Field(default = "")
+    player_b_id     = scrapy.Field()
+    player_b_domain = scrapy.Field()
 
 
 class Match(DefaultValueItem):
-    id          = scrapy.Field(default = 0, output_processor = TakeFirst())
-    m_time      = scrapy.Field(output_processor=TakeFirst())
-    home_scores = scrapy.Field(default = 0, output_processor = TakeFirst())
-    away_scores = scrapy.Field(default = 0, output_processor = TakeFirst())
-    finish      = scrapy.Field(default = 0, output_processor = TakeFirst())
+    id          = scrapy.Field()
+    m_time      = scrapy.Field()
+    home_scores = scrapy.Field()
+    away_scores = scrapy.Field()
+    finish      = scrapy.Field()
 

@@ -3,7 +3,8 @@
 
 
 #from scrapy.http import Request
-from scrapy.contrib.loader import ItemLoader
+#from scrapy.contrib.loader import ItemLoader
+from soccer.items import SoccerItemLoader as ItemLoader
 from soccer.items import Match, Football, FootballDetail
 import json
 from itertools import chain
