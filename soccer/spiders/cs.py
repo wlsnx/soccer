@@ -59,6 +59,8 @@ class SoccerSpider(Spider):
         elif delta < timedelta(0):
             return -1
         match_time = match["time"]
+        if not time:
+            return 0
         now = datetime.now().time()
         interval = match_time.seconds - (now.hour * 3600 + now.minute * 60 + now.second)
         return max(interval, 0)
@@ -73,7 +75,7 @@ class SoccerSpider(Spider):
                           dont_filter=True,
                           method="POST",
                           callback=self.parse_match,
-                          meta=dict(match=match))
+                          meta=dict(match=match.copy()))
         wait_seconds = self.wait_match(match)
         if wait_seconds >= 0:
             reactor.callLater(wait_seconds,
