@@ -59,7 +59,7 @@ class SoccerSpider(Spider):
         elif delta < timedelta(0):
             return -1
         match_time = match["time"]
-        if not time:
+        if not match_time:
             return 0
         now = datetime.now().time()
         interval = match_time.seconds - (now.hour * 3600 + now.minute * 60 + now.second)
