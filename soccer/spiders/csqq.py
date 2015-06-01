@@ -61,6 +61,10 @@ class CsqqSpider(SoccerSpider):
         yield
 
     def same_match(self,tmatch, match):
+        if tmatch["homeName"] == u"茅台":
+            tmatch["homeName"] = u"人和"
+        elif tmatch["awayName"] == u"茅台":
+            tmatch["awayName"] = u"人和"
         return str(match["date"]) in tmatch["startTime"] and \
             tmatch["homeName"] in match["home"] and \
             tmatch["awayName"] in match["away"]
