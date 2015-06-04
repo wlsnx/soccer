@@ -88,8 +88,6 @@ class SoccerSpider(Spider):
         self.crawler.signals.connect(self.spider_idle, signals.spider_idle)
         self.SCRAPE_INTERVAL = self.settings.getint("SCRAPE_INTERVAL", 10)
         self.SERVER = self.settings.get("DATABASE_SERVER")
-        self.db = dataset.connect(self.SERVER)
-        self.matches = list(self.db.query(self.sql))
         self.CLOSE_ON_IDLE = self.settings.getbool("CLOSE_ON_IDLE", True)
         #log.start_from_crawler(self.crawl)
 
@@ -99,6 +97,8 @@ class SoccerSpider(Spider):
 
     def start_requests(self):
         self.load_config()
+        self.db = dataset.connect(self.SERVER)
+        self.matches = list(self.db.query(self.sql))
         reactor.callLater(self.wait_to_tomorrow(),
                           self.restart)
         #self.crawler.signals.connect(self.spider_idle,

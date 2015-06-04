@@ -23,6 +23,7 @@ SHORTCUT = {
 }
 MATCH_STATUS = {
     "fulltime": 2,
+    "live": 1,
     "prematch": 0,
 }
 
@@ -90,14 +91,16 @@ class CsqqSpider(SoccerSpider):
         period = stat["period"]
         finish = MATCH_STATUS.get(period, 1)
 
-        home_score = stat["homescore"].replace("-", "0")
-        away_score = stat["awayscore"].replace("-", "0")
+        home_score = stat["homescore"]
+        away_score = stat["awayscore"]
 
         match_loader = ItemLoader(Match())
 
         match_loader.add_value("id", match["id"])
-        match_loader.add_value("home_scores", home_score)
-        match_loader.add_value("away_scores", away_score)
+        if home_score.isdigit():
+            match_loader.add_value("home_scores", home_score)
+        if away_score.isdigit():
+            match_loader.add_value("away_scores", away_score)
         match_loader.add_value("finish", finish)
         match_loader.add_value("m_time", stat["time"])
 
