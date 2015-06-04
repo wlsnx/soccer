@@ -9,6 +9,7 @@ import redis
 from soccer.items import Match, Football, FootballDetail
 import cPickle as pickle
 from twisted.internet import reactor
+#from sqlalchemy.exc import OperationalError
 
 
 def equal(item, old_item):
@@ -59,7 +60,10 @@ class DictCachedPipeline(object):
         old_item = self.cache.get(key)
         if not (old_item and equal(item, old_item)):
             self.cache.set(key, item, **self.setargs)
-            self.save(item)
+            try:
+                self.save(item)
+            except: #OperationalError:
+                spider.crawler.engine.close_spider(spider)
         return item
 
     def save(self, item):
