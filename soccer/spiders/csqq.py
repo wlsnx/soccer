@@ -179,8 +179,10 @@ class CsqqSpider(SoccerSpider):
         for full, short in SHORTCUT.items():
             for team in ("home", "away"):
                 football_loader.add_value(team + "_" + full, stat[team].get(short, 0))
-        football_loader.add_value("home_scores", home_score)
-        football_loader.add_value("away_scores", away_score)
+        if home_score.isdigit():
+            football_loader.add_value("home_scores", home_score)
+        if away_score.isdigit():
+            football_loader.add_value("away_scores", away_score)
         home_player_stat = stat["home"].get("player", [])
         away_player_stat = stat["away"].get("player", [])
         home_saving = sum([int(player_stat.get("sv", 0)) for player_stat in home_player_stat])
